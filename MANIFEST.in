@@ -1,0 +1,4 @@
+include mlapp/schema.sql
+graft mlapp/static
+graft mlapp/templates
+global-exclude *.pyc
