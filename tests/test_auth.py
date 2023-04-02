@@ -87,4 +87,4 @@ def test_modify_session(client):
     response = client.get("/users/me")
     assert response.json["username"] == "flask"
 
-# NO TESTS FOR POSTS LIKE FLASKBLOG TUTORIAL YET!
+# TODO: MAKE TESTS FOR POSTS LIKE FLASKBLOG TUTORIAL YET!
