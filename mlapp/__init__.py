@@ -1,13 +1,28 @@
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
+
+def page_not_found(e):
+  
+    """Displays a custom Error page for a 404 status code.
+
+        Paramters: 
+            e (ANY): Exception 
+        
+            Returns:
+                render_template('error/404.html'), 404: """
+    return render_template('error/404.html'), 404
+
+def internal_server_error(e):
+  """Displays a custom Error page for a 500 status code."""
+  return render_template('500.html'), 500
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        # CHANGE SECRET_KEY WHEN DEPLOYING!!!
+        # TODO: CHANGE SECRET_KEY WHEN DEPLOYING!
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
@@ -28,12 +43,24 @@ def create_app(test_config=None):
     # a simple page that says hello
     @app.route('/hello')
     def hello():
+
         return 'Hello, World!'
     
+    # relative imports from this directory
     from . import db
     db.init_app(app)
 
+    # register Blueprints
     from . import auth
     app.register_blueprint(auth.bp)
+    
+    from . import analyser
+    app.register_blueprint(analyser.bp)
+    app.add_url_rule('/', endpoint='index')
+
+    # register error handlers
+    app.register_error_handler(404, page_not_found)
+    app.register_error_handler(500, internal_server_error)
+
 
     return app
