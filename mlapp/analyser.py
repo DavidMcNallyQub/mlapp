@@ -35,7 +35,6 @@ def predict(comment):
 
 @bp.route("/predict", methods=['POST'])
 def test():
-    # test_comment = "test "+comment
     req = request.get_json()
     print(req)
     model = keras.models.load_model("model")
@@ -45,7 +44,27 @@ def test():
     prediction = get_classification(prediction_value)
     response = make_response(jsonify({"prediction": prediction,"comment":req['comment']}),200)
     return response
+
+# @bp.route("/comment_classification/<comment>")
+# def classify_comment(comment):
+#     prediction = predict()
+#     return render_template("classifcation.html",comment=comment,prediction=prediction)
+
+def predict(comment):
+    model = keras.models.load_model("model")
+    comment_array = np.array([comment])
+    prediction_value = (model.predict(comment_array, verbose=0)[0][0]).item()
+    return prediction_value
+
+# Testing fetch API with html template
+@bp.route("/classify", methods=['POST'])
+def classify_comment():
+    comment = request.form['comment']
+    prediction = predict(comment)
+    response = make_response(render_template('analyser/classification.html', prediction=prediction,comment=comment))
+    return response
     
+
 def get_classification(prediction: float) -> str:
     """Takes the models prediction value and returns the classification.
 

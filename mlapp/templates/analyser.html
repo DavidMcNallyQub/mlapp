@@ -1,18 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/main.js')}}">
-
-    </script>
-
-</head>
-
-
 {% extends 'base_layout.html'%}
 
 {% block content %}
@@ -86,22 +71,15 @@
 <div class="container-fluid my-5">
     <div class="row justify-content-center">
         <div class="col-8">
-
             <div class="bg-dark text-secondary px-4 py-5 text-center">
                 <div class="py-5">
                     <h1 class="display-5 fw-bold text-white">Give DOLOS a Try!</h1>
                     <div class="col-lg-6 mx-auto">
                         <p class="fs-5 mb-4">DOLOS is designed to classify misinformation within user comments so let's give it a try!</p>
                         <p class="fs-5 mb-4">Input a comment below and let DOLOS analyse the text. </p>
-                        <!-- <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                            <button type="button" class="btn btn-outline-info btn-lg px-4 me-sm-3 fw-bold">Custom
-                                button</button>
-                            <button type="button" class="btn btn-outline-light btn-lg px-4">Secondary</button>
-                        </div> -->
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -111,12 +89,12 @@
         <div class="col-8">
             <div class="row mx-auto">
                 <form class="form-floating " method="GET" id="commentForm">
-                    <textarea class="form-control my-3" id="commentId" name="commentName" value="commentValue" rows="4"
+                    <textarea class="form-control my-3" id="commentInput" name="commentName" value="commentValue" rows="4"
                         cols="50" placeholder="Comment here..." placeholder="Comment here..." maxlength="250"
                         required></textarea>
-                    <label for="commentId">Comment</label>
+                    <label for="commentInput">Comment</label>
                     <div class="">
-                        <button class="btn btn-dark " id="analyseButton" type="button" onclick="test()">
+                        <button class="btn btn-dark" id="analyseButton" type="button" onclick="analyseComment()">
                             <span class="" id="analyseButtonBody" role="status" aria-hidden="true"></span>
                             <span id="analyseText">Analyse Comment</span>
                         </button>
@@ -127,19 +105,7 @@
     </div>
 </div>
 <!--Analyser Result-->
-<div class="container-fluid my-5 d-none" id="analyserResult">
-    <!-- <div class="row justify-content-center">
-        <div class="col-6">
-            <div class="alert alert-success" role="alert">
-                <h4 class="alert-heading" id="resultHeading">Well done!</h4>
-                <p>Aww yeah, you successfully read this important alert message. This example text is going to run a bit
-                    longer so that you can see how spacing within an alert works with this kind of content.</p>
-                <hr>
-                <p class="mb-0">Whenever you need to, be sure to use margin utilities to keep things nice and tidy.</p>
-            </div>
-        </div>
-    </div> -->
-</div>
+<div class="container-fluid my-5" id="analyserResult"></div>
 <!--Issues-->
 <div class="container-fluid my-5">
     <div class="row justify-content-center">
@@ -150,15 +116,6 @@
             <div class="list-group">
                 <a href="#" class="list-group-item list-group-item-action active" aria-current="true">
                     <div class="d-flex w-100 justify-content-between">
-
-                        <!-- <button type="button" class="btn btn-primary position-relative">
-                            Title of the issue
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                Misinformation
-                                <span class="visually-hidden">unread messages</span>
-                            </span>
-                        </button> -->
                         <h5 class="mb-1">Classified: <span class="badge bg-success">Neutral</span></h5>
                         <small>3 days ago</small>
                     </div>
@@ -186,161 +143,10 @@
     </div>
 </div>
 <script src="{{ url_for('static', filename='js/sidebars.js') }}"></script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<!-- <script>
-    const commentForm = document.getElementById('commentForm');
-    var comment = document.getElementById('commentId').value;
-    commentForm.addEventListener("submit", (e) =>{
-        e.preventDefault();
-        console.log(comment);
-    });
-</script> -->
+
 {% endblock %}
 
 {% block script %}
-<script>
-    async function test() {
-        let prediction;
-        let comment = document.getElementById('commentId');
-        // const spinner = document.querySelector('.spinner-wrapper');
-        buttonUpdateTest("analyseButtonBody");
-        let entry = {
-            comment: comment.value
-        }
-        let response = await fetch(`${window.origin}/predict`, {
-            method: "POST",
-            credentials: "include",
-            body: JSON.stringify(entry),
-            cache: "no-cache",
-            headers: new Headers({
-                "content-type": "application/json"
-            })
-        }).then(function (response) {
-            if (response.status !== 200) {
-                console.log(`Response status was not 200: ${response.status}`);
-            }
-            response.json().then(function (data) {
-                console.log(data);
-                prediction = data['prediction'];
-                comment = data['comment']
-
-                console.log(`Prediction: ${prediction}`)
-                let alertStyle;
-                if (prediction === "Misinformation") {
-                    alertStyle = "alert-danger"
-                } else {
-                    alertStyle = "alert-success"
-                }
-
-                let htmlsegment = `<div class="row justify-content-center">
-                                        <div class="col-8">
-                                            <div class="alert ${alertStyle}" role="alert">
-                                                <h4 class="alert-heading" id="resultHeading">${prediction}</h4>
-                                                <p>${comment}</p>
-                                                <hr>
-                                                <p class="mb-0">Do you agree with DOLOS? If not, raise an issue for the developer!</p>
-                                            </div>
-                                            <p>
-                                                <button class="btn btn-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                                                    Raise an Issue
-                                                </button>
-                                                </p>
-                                                <div class="collapse" id="collapseExample">
-                                                <div class="card card-body">
-                                                    <form action="" method="POST">
-                                                        <div class="mb-3">
-                                                            <label for="exampleInput1" class="form-label">Classification</label>
-                                                            <input class="form-control" id="exampleInput1" type="text" value="${prediction}" aria-label="readonly input example" readonly>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label for="exampleInput2" class="form-label">Comment</label>
-                                                            <input class="form-control" id="exampleInput2" type="text" value="${comment}" aria-label="readonly input example" readonly>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label for="exampleInput3" class="form-label">Issue Details</label>
-                                                            <textarea type="text" rows="3" class="form-control" id="exampleInput3"></textarea>
-                                                        </div>
-                                                        <button class="btn btn-dark" type="submit" value="submit">
-                                                            Submit Issue
-                                                        </button>
-                                                    <form>
-                                                    <p class="mt-2">
-                                                    Once DOLOS has analysed and classified a comment, sometimes it gets it wrong. By submitting the issue above you are letting the developer and others know about issues that allow improvements to be made to DOLOS!  
-                                                    </p>
-                                                    </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                    
-`
-                let analyserResult = document.querySelector('#analyserResult');
-                analyserResult.innerHTML = htmlsegment;
-                document.getElementById("analyserResult").classList.remove("d-none");
-
-            })
-        })
-        setTimeout(() => { buttonReplaceTest("analyseButtonBody"); }, 1000)
-    }
-
-    function changeDisplay(id, display = "none") {
-
-        document.getElementById(id).style.display = display;
-    }
-
-    function testChangeDisplay() {
-        changeDisplay("spinnerButton", "block");
-        changeDisplay("analyseButton");
-    }
-
-    function classifyPrediction(prediction) {
-        if (prediction >= 0.5) {
-            return "Misinformation"
-        } else {
-            return "Neutral"
-        }
-    }
-
-    function addClassList(id) {
-        document.getElementById(id).classList.add("spinner-border", "spinner-border-sm")
-    }
-
-    function removeClassList(id, className) {
-        document.getElementById(id).classList.remove(className)
-    }
-
-    function disableButton(id, boolean = true) {
-        document.getElementById(id).disabled = boolean;
-    }
-
-    function replaceTextContent(id, text) {
-        document.getElementById(id).textContent = text
-    }
-
-    function buttonUpdateTest(id) {
-        addClassList(id);
-        disableButton("analyseButton");
-        replaceTextContent("analyseText", "Analysing...");
-    }
-
-    function buttonReplaceTest(id) {
-        removeClassList(id, "spinner-border");
-        removeClassList(id, "spinner-border-sm");
-        disableButton("analyseButton", false);
-        replaceTextContent("analyseText", "Try again!");
-    }
-
-    function printSomething() {
-        console.log("Hello!");
-    }
-
-    function displayAnalyserResult(id, result) {
-        removeClassList(id);
-        replaceTextContent("resultHeading", result);
-    }
-
-</script>
-
 
 {% endblock %}
 
