@@ -1,5 +1,5 @@
 """
-This module contains a Blueprint for the protected view functions and other related functions.
+This module contains a Blueprint to register view functions that require authentication and their related functions.
 
 Functions:
 - analyser: Render the analyser page template as a string which Flask uses as the body of the response.
@@ -23,8 +23,7 @@ Functions:
 - test_issue_exists_required: Test the view functions that require existing issues.
 """
 import functools
-from tensorflow import keras
-import numpy as np
+
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, make_response, Response
 )
@@ -34,14 +33,17 @@ from werkzeug.exceptions import abort
 from mlapp.db import get_db
 from mlapp.forms import IssueForm
 from mlapp.auth import login_required
-from sqlite3 import Row
+# for TensorFlow model
+from tensorflow import keras
+import numpy as np
 # for YouTube API
 import os
 import googleapiclient.discovery
-from googleapiclient.errors import HttpError
 # for type hints
 from typing import List, Dict, Any
+from sqlite3 import Row
 from numpy import ndarray
+from googleapiclient.errors import HttpError
 # import json
 from deprecated import deprecated
 
@@ -585,7 +587,7 @@ def account() -> str:
     Returns
     -------
     str
-        A rendered template string for the account page.
+        A rendered template string for the account page which Flask uses as the body of the response.
     """
     db = get_db()
     user_issues = {}
