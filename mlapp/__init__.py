@@ -1,6 +1,5 @@
 import os
 from flask import Flask
-from .views import register_api
 
 def create_app(test_config: str=None) -> Flask:
     """The Flask factory function.
