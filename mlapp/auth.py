@@ -1,14 +1,8 @@
 """
-This module contains a Blueprint for authorisation views.
+This module contains a Blueprint to register view functions for authorisation.
 
-Example:
-
-Attributes
-
-Todo:
-
-Typical usage example:
-    _type_: _description_
+Functions:
+- 
 """
 import functools
 from typing import Union
@@ -17,10 +11,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from mlapp.db import get_db
-from mlapp.extensions import dbase 
 from mlapp.forms import RegistrationForm, LoginForm
-from .models import User
-from sqlalchemy.exc import IntegrityError, MultipleResultsFound
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -72,47 +63,6 @@ def register() -> Union[Response, str]:
 
     return render_template('auth/register.html')
 
-@auth_bp.route('/register_sqlalchemy', methods=('GET', 'POST'))
-def register_sqlalchemy() -> Union[Response, str]:
-    """The register view function.           
-
-    Process a request to the register URL.
-    For a POST request retrieve the user's email and password and register the user. 
-    After registration, redirect the user to the login page. 
-    If validation error(s) occur for the RegistrationForm, or the user is already registered in the database, 
-    render the register page and Flash corresponding error. 
-    For a GET request, render the register page.
-
-    Returns:
-        Union[Response, str]: For a successful POST request return a Redirect Reponse. 
-        For a GET request or a error on a POST request, return a Rendered template string.
-    """
-    if request.method == 'POST':
-        reg_form = RegistrationForm(request.form)
-        errors = None
-
-        if not reg_form.validate():
-            errors = reg_form.errors
-
-        email = request.form["email"]
-        password = request.form['password']
-        user = User(email=email,
-                    password=generate_password_hash(password))
-        if errors is None:
-            try:
-                dbase.session.add(user)
-                dbase.session.commit()
-            except IntegrityError:
-                errors = f"User {email} is already registered!"
-            except Exception as e:
-                errors = f"An unxpected error has occured during registration."
-            else:
-                return redirect(url_for("auth.login"))
-
-        flash(errors)
-    
-    return render_template('auth/register.html')
-
 @auth_bp.route('/login', methods=('GET', 'POST'))
 def login() -> Union[Response, str]:
     """The login view function.
@@ -131,7 +81,6 @@ def login() -> Union[Response, str]:
     if request.method == 'POST':
         login_form = LoginForm(request.form)
         errors = {}
-
         # login_form.validate populates reg_form.errors
         # login_form.errors returns a dictionary of field keys and lists of field errors values.
         if not login_form.validate():
@@ -161,50 +110,6 @@ def login() -> Union[Response, str]:
 
     return render_template('auth/login.html')
 
-@auth_bp.route('/login_sqlalchemy', methods=('GET', 'POST'))
-def login_sqlalchemy() -> Union[Response, str]:
-    """The login view function.
-
-    Process a request to the login URL.
-    For a POST request, retrieve the user's email and password and log in the user.
-    After login, redirect the user to the homepage. 
-    If the user's email does not exist in the database or their password does not match,
-    render the login page and Flash any errors.
-    For a GET request, render the login page. 
-
-    Returns:
-        Union[Response, str]: For a successful POST request return a Redirect Reponse. 
-        For a GET request or a error on a POST request, return a Rendered template string.
-    """
-    if request.method == 'POST':
-        login_form = LoginForm(request.form)
-
-        errors = None
-        # check for form validation errors
-        if not login_form.validate():
-            errors = login_form.errors
-
-        email = request.form['email']
-        password = request.form['password']
-        try:
-            user = dbase.session.execute(dbase.select(User).filter_by(email = email)).scalar_one_or_none()
-        except MultipleResultsFound:
-            errors = "This email address has been registered to multiple accounts!"
-       
-        if user is None:
-            errors = 'The email address entered has not been registered on the system!'
-        elif not check_password_hash(user.password, password):
-            errors = 'Incorrect password'
-        
-        if errors is None:
-            session.clear()
-            session['user_id'] = user.user_id
-            return redirect(url_for('index'))
-
-        flash(errors)
-
-    return render_template('auth/login.html')
-
 @auth_bp.before_app_request
 def load_logged_in_user():
     """Check if a user_id is stored in the session, gets that user's data from the database 
@@ -222,26 +127,6 @@ def load_logged_in_user():
             'SELECT * FROM user WHERE user_id = ?', 
             (user_id,)
         ).fetchone()
-
-# @auth_bp.before_app_request # Do not want this to run before app request if using basic SQLite
-def load_logged_in_user_sqlalchemy():
-    """Check if a user_id is stored in the session, gets that user's data from the database 
-    and store it on g.user. 
-
-    For any requested URL load_logged_in_user will be run. This allows a logged in user's
-    information to be made available to other view functions. If there is no user_id, g.user
-    will be None. 
-    """
-    user_id = session.get('user_id')
-    if user_id is None:
-        g.user = None
-    else:
-        try:
-            g.user = dbase.session.execute(dbase.select(User).filter_by(user_id=user_id)).scalar_one_or_none()
-        except MultipleResultsFound:
-            session.clear()
-            print("Multiple users found with the same user_id. Cannot load logged in user.")
-
 
 @auth_bp.route('/logout')
 def logout() -> Response:
