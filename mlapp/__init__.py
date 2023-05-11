@@ -24,11 +24,8 @@ def create_app(test_config: str=None) -> Flask:
         # TODO: CHANGE SECRET_KEY WHEN DEPLOYING!
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'mlapp.sqlite'),
-        # SQLALCHEMY_DATABASE_URI='sqlite:////tmp/test.db'
-        # SQLALCHEMY_DATABASE_URI='sqlite:///test.db'
     )
 
-    # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
     if test_config is None:
         # load the instance config, if it exists, when not testing
         app.config.from_pyfile('config.py', silent=True)
@@ -50,10 +47,6 @@ def create_app(test_config: str=None) -> Flask:
     # initialise the app with the Flask tutorial SQLite database.
     from . import db
     db.init_app(app)
-
-    # initialise the app with the Flask-SQLAlchemy extension
-    # from .extensions import dbase as db
-    # db.init_app(app)
 
     # register Blueprints
     from . import auth, protected, public

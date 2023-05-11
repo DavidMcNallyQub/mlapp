@@ -31,12 +31,10 @@ from flask import (
 from flask_paginate import Pagination, get_page_parameter
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
-from mlapp.extensions import dbase
 from mlapp.db import get_db
 from mlapp.forms import IssueForm
 from mlapp.models import Issue, User, Classification
 from mlapp.auth import login_required
-from sqlalchemy.exc import IntegrityError
 from sqlite3 import Row
 # for YouTube API
 import os
@@ -92,22 +90,6 @@ def analyser():
     issues_for_page = issues[start:end]
     
     return render_template('protected/analyser.html', issues=issues_for_page, pagination=pagination)
-
-
-@protected_bp.route('/analyser_sqlalchemy')
-@login_required
-def analyser_sqlalchemy():
-    issues = dbase.session.execute(dbase.select(Issue)
-                                   .join(User, Issue.user_id == User.user_id)
-                                   .join(Classification, Issue.classification_id == Classification.classification_id)
-                                   .order_by(Issue.date_created)
-                                   ).scalars().fetchall()
-    issue = Issue(comment="Bill gates is lovely!",
-                  issue="This was flagged as misinformation and clearly is not.", user_id=1, classification_id=1)
-    # dbase.session.add(issue)
-    # dbase.session.commit()
-    return render_template('protected/analyser.html', issues=issues)
-
 
 @protected_bp.route('/issues', methods=["POST"])
 def create_issue() -> str | Response:
