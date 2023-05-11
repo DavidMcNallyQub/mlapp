@@ -64,9 +64,4 @@ def create_app(test_config: str=None) -> Flask:
     app.register_error_handler(404, error_handlers.page_not_found)
     app.register_error_handler(500, error_handlers.internal_server_error)
 
-    # resister Class-based Views
-    from . import models
-    register_api(app, models.User, "users")
-    register_api(app, models.Issue, "issues") 
-
     return app
