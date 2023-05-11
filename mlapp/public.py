@@ -1,9 +1,9 @@
 """
-This module contains view functions for the public views and related functions.
+This module contains view functions that do no require authentication and their related functions.
 
 Functions:
-- index: Render the index page template as a string which Flask uses as the body of the response.
-- about: Render the about page template as a string which Flask uses as the body of the response.
+- index: The index route.
+- about: The about route. 
 
 """
 from flask import (
@@ -20,7 +20,7 @@ def index() -> str:
     Returns
     -------
     str 
-        A rendered template string for the index page.
+        A rendered template string for the index page which Flask uses as the body of the response. 
     """
     return render_template('public/index.html')
 
@@ -33,6 +33,6 @@ def about() -> str:
     Returns
     -------
     str
-        A rendered template string for the about page.
+        A rendered template string for the about page which Flask uses as the body of the response.
     """
     return render_template('public/about.html')

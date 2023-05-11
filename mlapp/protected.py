@@ -50,7 +50,6 @@ from deprecated import deprecated
 
 protected_bp = Blueprint('protected', __name__)
 
-
 @protected_bp.route('/analyser', methods=["GET", "POST"])
 @login_required
 def analyser():
