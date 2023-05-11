@@ -33,7 +33,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
 from mlapp.db import get_db
 from mlapp.forms import IssueForm
-from mlapp.models import Issue, User, Classification
 from mlapp.auth import login_required
 from sqlite3 import Row
 # for YouTube API
