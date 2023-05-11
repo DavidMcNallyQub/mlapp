@@ -2,8 +2,8 @@
 This module is used to test functionality of view functions that do not require authentication and any related functions.  
 
 Functions:
-- test_index: Test the index view function.
-- test_about: Test the about view function.
+- test_index: Test the index route.
+- test_about: Test the about route.
 
 """
 
