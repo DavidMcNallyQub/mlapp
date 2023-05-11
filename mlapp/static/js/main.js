@@ -1,13 +1,14 @@
-async function analyseComment() {
-    // change button to have bootstrap spinner
-    document.getElementById("analyseButtonBody").classList.add("spinner-border", "spinner-border-sm");
-    document.getElementById("analyseButton").disabled = true;
-    document.getElementById("analyseText").textContent = "Analysing...";
-    // analyse comment
-    let comment_textarea = document.getElementById('commentInput');
+async function analyse_comments(comment_source) {
+    // change button to have bootstrap spinner while analysing comment data.
+    document.getElementById(`analyse_${comment_source}_comments_button_body`).classList.add("spinner-border", "spinner-border-sm");
+    document.getElementById(`analyse_${comment_source}_comments_button`).disabled = true;
+    document.getElementById(`analyse_${comment_source}_comments_button_text`).textContent = "Analysing...";
+    // prepare data to send to the endpoint.
+    let input = document.getElementById(`${comment_source}_comments_input`);
     let data = new FormData()
-    data.append("comment", comment_textarea.value)
-    fetch(`${window.origin}/classify`, {
+    data.append("input", input.value)
+    // use fetch api to send request and return a response.
+    fetch(`${window.origin}/analyse_comments/${comment_source}`, {
         method: "POST",
         credentials: "include",
         body: data,
@@ -18,29 +19,18 @@ async function analyseComment() {
         }
         return response.text()
     }).then(function (html) {
+        // use DOMParser to parse string into a DOM Document.
         let parser = new DOMParser();
         let doc = parser.parseFromString(html, "text/html");
-        let prediction = doc.getElementById("resultHeading").textContent;
-        if (prediction >= 0.5) {
-            doc.querySelector("#resultHeading").textContent = "Misinformation";
-            doc.querySelector("#predictedClassification").setAttribute("value","Misinformation");
-            doc.getElementById("result").classList.add("alert-danger");
-        } else {
-            doc.querySelector("#resultHeading").textContent = "Neutral";
-            doc.querySelector("#predictedClassification").setAttribute("value","Neutral");
-            doc.getElementById("result").classList.add("alert-success");
-        }
-        console.log(doc.getElementById("predictedClassification").value)
-        let analyserResult = document.querySelector('#analyserResult');
+        let analyserResult = document.querySelector(`#analyser_${comment_source}_result`);
         analyserResult.innerHTML = doc.body.innerHTML;
     }).catch(function (error) {
-        console.error(`Error analysing comment: ${error.message}`);
+        console.error(`Error analysing ${comment_source} comments: ${error.message}`);
     });
-    // revert button
+    // revert button after 1 second.
     setTimeout(() => {
-        document.getElementById("analyseButtonBody").classList.remove("spinner-border", "spinner-border-sm");
-        document.getElementById("analyseButton").disabled = false;
-        document.getElementById("analyseText").textContent = "Analyse";
+        document.getElementById(`analyse_${comment_source}_comments_button_body`).classList.remove("spinner-border", "spinner-border-sm");
+        document.getElementById(`analyse_${comment_source}_comments_button`).disabled = false;
+        document.getElementById(`analyse_${comment_source}_comments_button_text`).textContent = "Analyse";
     }, 1000)
 }
-

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <title>{% block title %} {% endblock %}</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp" crossorigin="anonymous">
 
@@ -74,8 +75,8 @@
                 <h3 class="float-md-start mb-0">DOLOS</h3>
                 <nav class="nav nav-masthead justify-content-center float-md-end">
                     <a class="nav-link fw-bold py-1 px-0 active" aria-current="page" href="{{ url_for('index')}}">Home</a>
-                    <a class="nav-link fw-bold py-1 px-0" href="{{ url_for('analyser.about')}}">What is DOLOS?</a>
-                    <a class="nav-link fw-bold py-1 px-0" href="{{ url_for('analyser.analyser')}}">Try out DOLOS!</a>
+                    <a class="nav-link fw-bold py-1 px-0" href="{{ url_for('public.about')}}">What is DOLOS?</a>
+                    <a class="nav-link fw-bold py-1 px-0" href="{{ url_for('protected.analyser')}}">Try out DOLOS!</a>
                 </nav>
             </div>
         </header>
@@ -84,7 +85,7 @@
             <h1>Welcome to DOLOS.</h1>
             <p class="lead">An application driven by machine learning, used to analyse social media comments and detect misinformation within the text.</p>
             <p class="lead">
-                <a href="{{ url_for('analyser.analyser')}}" class="btn btn-lg btn-light fw-bold border-white bg-white">Let's Begin!</a>
+                <a href="{{ url_for('protected.analyser')}}" class="btn btn-lg btn-light fw-bold border-white bg-white">Let's Begin!</a>
             </p>
         </main>
 

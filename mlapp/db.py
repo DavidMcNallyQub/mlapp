@@ -1,3 +1,15 @@
+"""
+Functions used to create, get and close a connection to a SQLite database. 
+
+    Functions: 
+    ----------
+    get_db() -> Connection
+    close_db(e) 
+    init_db()
+    init_db_command()
+    init_app(Flask)
+"""
+
 import sqlite3
 from sqlite3 import Connection
 import click
@@ -6,17 +18,19 @@ from flask import current_app, g
 def get_db() -> Connection:
     """Return the SQLite3 database connection.
 
-    The connection to the SQLite database is stored in the g object. g is unique for 
+    The connection to the SQLite database is stored in Flask's g object. g is unique for 
     all requests and can store data that can be accessed by multiple functions during requests.
-    get_db() will be called when the application has been created and is handling a request, 
-    so current_app() can be used. 
-    sqlite3.connect() establishes a connection to the file pointed at by the DATABASE
+    get_db will be called when the application has been created and is handling a request, 
+    so current_app can be used. 
+    sqlite3.connect establishes a connection to the file pointed at by the DATABASE
     configuration key.
     Columns can be accessed by name as sqlite3.Row tells the connection to return rows that
     act similarly to dictionaries.
 
-    Returns:
-        Connection: A SQLite3 Connection object.
+    Returns
+    -------
+    Connection
+        A SQLite3 Connection object.
     """
     if 'db' not in g:
         g.db = sqlite3.connect(
@@ -57,7 +71,6 @@ def init_db_command():
 
 def init_app(app):
     """Register the close_db() and init_db_command() with the application instance. 
-
 
     close_db() will be called after a response and init_db_command() will add a new command
     that can be called with the 'flask' command

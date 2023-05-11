@@ -1,0 +1,195 @@
+{% extends 'base_layout.html'%}
+
+{% block content %}
+<div class="container-fluid my-5">
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <div class="bg-dark text-secondary px-4 py-5 text-center">
+                <div class="py-5">
+                    <h1 class="display-5 fw-bold text-white">Give DOLOS a Try!</h1>
+                    <div class="col-lg-6 mx-auto">
+                        <p class="fs-5 mb-4">DOLOS is designed to classify misinformation within user comments so let's
+                            give it a try!</p>
+                        <p class="fs-5 mb-4">Input a comment below and let DOLOS analyse the text. </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Single Comment Analyser-->
+<div class="container-fluid my-5">
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <div class="row mx-auto">
+                <form class="form-floating" method="GET" id="comment_form">
+                    <textarea class="form-control my-3" id="manually_entered_comments_input" name="comment_name"
+                        value="comment_value" rows="4" cols="50" placeholder="Comment here..."
+                        placeholder="Comment here..." maxlength="250" required></textarea>
+                    <label for="manually_entered_input">Comment</label>
+                    <div class="">
+                        <button class="btn btn-dark" id="analyse_manually_entered_comments_button" type="button"
+                            onclick="analyse_comments('manually_entered')">
+                            <span class="" id="analyse_manually_entered_comments_button_body" role="status"
+                                aria-hidden="true"></span>
+                            <span id="analyse_manually_entered_comments_button_text">Analyse Comment</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Single Comment Analyser Result-->
+<div class="container-fluid my-5" id="analyser_manually_entered_result"></div>
+
+<!--Youtube Comment Analyser-->
+<div class="container-fluid my-5">
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <div class="row mx-auto">
+                <form class="form-floating " method="GET" id="analyse_youtube_video_comments_form">
+                    <input class="form-control my-3" id="youtube_video_comments_input" name="youtube_video_url"
+                        value="youtube_video_url" placeholder="Insert Youtube URL here..." required></textarea>
+                    <label for="youtube_video_input">Youtube Url</label>
+                    <div class="">
+                        <button class="btn btn-dark" id="analyse_youtube_video_comments_button" type="button"
+                            onclick="analyse_comments('youtube_video')">
+                            <span class="" id="analyse_youtube_video_comments_button_body" role="status"
+                                aria-hidden="true"></span>
+                            <span id="analyse_youtube_video_comments_button_text">Analyse Video Comments</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Youtube Comment Analyser Result-->
+<div class="container-fluid my-5" id="analyser_youtube_video_result"></div>
+
+<!--Issues-->
+<div class="container-fluid my-5">
+    <div class="row justify-content-center">
+        <div class="text-center mb-3">
+            <h1 class="fs-1">Found Issues:</h1>
+        </div>
+
+        <div class="col-8">
+            
+            
+
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-actioksn active" aria-current="true">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Classified: <span class="badge bg-success">Neutral</span></h5>
+                        <small>3 days ago</small>
+                    </div>
+                    <p class="mb-1">Comment: Bill gates created covid.</p>
+                    <small>This is obviously wrong!!!</small>
+                </a>
+                {% for issue in issues %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        {# Determine the badge style depending on the classification #}
+                        {% if issue.classification == "Misinformation" %}
+                        {% set badge_class = "danger" %}
+                        {% elif issue.classification == "Neutral" %}
+                        {% set badge_class = "success" %}
+                        {% else %}
+                        {% set badge_class = "warning" %}
+                        {% endif %}
+                        <h5 class="mb-1">Classified:
+                            <span class="badge bg-{{ badge_class }}">
+                                {{ issue.classification }}
+                            </span>
+                        </h5>
+                        <small>{{ issue.email }}</small>
+                        <small class="text-body-secondary">
+                            {{ issue.date_created.strftime("%d/%m/%Y, %H:%M:%S") }}
+                        </small>
+                    </div>
+                    <div class="d-flex w-100 justify-content-between">
+                        <div>
+                            <p class="mb-1">{{ issue.comment }}</p>
+                            {% if g.user['user_id'] == issue.user_id %}
+                            <form action="{{ url_for('protected.update_issue', issue_id=issue.issue_id) }}"
+                                method="POST" id="update_issue_form">
+                                <input id="update_issue_comment" type="hidden" name="comment"
+                                    value="{{ issue.comment }}">
+                                <input id="update_issue_issue" name="issue" value="{{ issue.issue }}">
+                                <input id="update_issue_date_created" type="hidden" name="date_created"
+                                    value="{{ issue.date_created }}">
+                                <input id="update_issue_user_id" type="hidden" name="user_id"
+                                    value="{{ issue.user_id }}">
+                                <input id="update_issue_classification_id" type="hidden" name="classification_id"
+                                    value="{{ issue.classification_id }}">
+                            </form>
+                            {% else %}
+                            <small class="text-body-secondary">{{ issue.issue }}</small>
+                            {% endif %}
+                        </div>
+                        {% if g.user['user_id'] == issue.user_id %}
+                        <div class="d-flex justify-content-end align-items-end">
+                            <button type="submit" class="btn btn-info" name="update_issue" value="{{ issue.issue_id }}"
+                                form="update_issue_form">Update Issue</button>
+                            <form action="{{ url_for('protected.delete_issue', issue_id=issue.issue_id) }}"
+                                method="POST">
+                                <button type="submit" class="btn btn-danger" name="delete_issue"
+                                    value="{{ issue.issue_id }}">Delete Issue</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Classified: <span class="badge bg-danger">Misinformation</span></h5>
+                        <small class="text-body-secondary">5 days ago</small>
+                    </div>
+                    <p class="mb-1">Another comment a user has analysed using DOLOS.</p>
+                    <small class="text-body-secondary">And some muted small print.</small>
+                </a>
+            </div>
+            {# PROVIDE PAGINATION FOR ISSUES USING FLASK-PAGINATION EXTENSION #}
+            <nav>
+                <ul class="pagination">
+                    {% if issues.has_prev %}
+                    <li class="page-item"><a class="page-link"
+                            href="{{ url_for('protected.analyser', page=issues.prev_num) }}">Previous</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                    {% endif %}
+                    {% for num in pagination.pages %}
+                    {% if num %}
+                    {% if num == issues.page %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('protected.analyser', page=num) }}">{{
+                            num }}</a></li>
+                    {% endif %}
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if issues.has_next %}
+                    <li class="page-item"><a class="page-link"
+                            href="{{ url_for('protected.analyser', page=issues.next_num) }}">Next</a></li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/sidebars.js') }}"></script>
+
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}

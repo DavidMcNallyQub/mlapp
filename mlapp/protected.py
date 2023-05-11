@@ -1,18 +1,34 @@
 """
-This module contains view functions for the comment analyser and related functions.
+This module contains a Blueprint for the protected view functions and other related functions.
 
 Functions:
-- index: The index view function.
-
+- analyser: Render the analyser page template as a string which Flask uses as the body of the response.
+- create_issue: Create an issue view function.
+- get_issue: The get_issue function.
+- test_update_issue: Test the update_issue view function.
+- test_create_update_validate: Test the form validators for the create_issue and update_issue view functions.
+- test_delete_issue: Test the delete_issue view function
+# TODO test_get_classification: Test the get_classification function.
+# TODO test_update_classification:
+# TODO test_delete_classification:
+# TODO test_analyse_comments:
+# TODO test_get_youtube_video_comments
+# TODO test_predict_comments:
+# TODO test_combine_analysed_data:
+# TODO test_calculate_prediction_confidence:
+# TODO test_classify_prediction:
+# TODO test_account:
+- test_login_required: Test the view functions that require a logged in user.
+- test_issue_author_required: Tests the view functions that require logged in users to be issue authors.
+- test_issue_exists_required: Test the view functions that require existing issues.
 """
 import functools
 from tensorflow import keras
 import numpy as np
-
-
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, make_response, Response
 )
+from flask_paginate import Pagination, get_page_parameter
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
 from mlapp.extensions import dbase
@@ -32,36 +48,69 @@ from numpy import ndarray
 # import json
 from deprecated import deprecated
 
-# TODO this blueprint could be for logged in user pages! Could have another blueprint for general access purposes!
-analyser_bp = Blueprint('analyser', __name__)
+protected_bp = Blueprint('protected', __name__)
 
-@analyser_bp.route('/')
-def index():
-    """The index view function.
 
-    Renders the landing page with navigation to most other parts of the application.
+@protected_bp.route('/analyser', methods=["GET", "POST"])
+@login_required
+def analyser():
+    """The analyser view function.
 
-    Returns
-    -------
-    str 
-        A rendered template string for the index page.
-    """
-    return render_template('index.html')
-
-@analyser_bp.route('/about')
-def about():
-    """The about view function.
-
-    Renders the about page which has details about the application. 
+    Renders the analyser page which contains comment analysers and displays issues raised by users.
 
     Returns
     -------
     str
-        A rendered template string for the about page.
+        A rendered template string for the analyser page.
     """
-    return render_template('about.html')
+    db = get_db()
+    errors = {}
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    per_page = 2 # set the number of issues per page
+    try:
+        issues = db.execute("SELECT i.issue_id, i.comment, i.issue, i.date_created, \
+            u.user_id, u.email, \
+            c.classification_id, c.classification \
+            FROM user AS u \
+            INNER JOIN issue AS i \
+            ON u.user_id = i.author_id \
+            INNER JOIN classification as c \
+            ON i.classified_id = c.classification_id \
+            ORDER BY i.date_created DESC"
+        ).fetchall()
+    except Exception as e:
+        issues = []
+        errors = {"error_getting_issues": ["Issues could not be loaded!"]}
+    if errors:
+        for category, message_list in errors.items():
+                for message in message_list:
+                    flash(message, category=category)
 
-@analyser_bp.route('/issues', methods=["POST"])
+    # use the paginate function to get a sublist of issues for the current page
+    pagination = Pagination(page=page, per_page=per_page, total=len(issues), css_framework='bootstrap5')
+    start = (page - 1) * per_page
+    end = start + per_page
+    issues_for_page = issues[start:end]
+    
+    return render_template('protected/analyser.html', issues=issues_for_page, pagination=pagination)
+
+
+@protected_bp.route('/analyser_sqlalchemy')
+@login_required
+def analyser_sqlalchemy():
+    issues = dbase.session.execute(dbase.select(Issue)
+                                   .join(User, Issue.user_id == User.user_id)
+                                   .join(Classification, Issue.classification_id == Classification.classification_id)
+                                   .order_by(Issue.date_created)
+                                   ).scalars().fetchall()
+    issue = Issue(comment="Bill gates is lovely!",
+                  issue="This was flagged as misinformation and clearly is not.", user_id=1, classification_id=1)
+    # dbase.session.add(issue)
+    # dbase.session.commit()
+    return render_template('protected/analyser.html', issues=issues)
+
+
+@protected_bp.route('/issues', methods=["POST"])
 def create_issue() -> str | Response:
     """Create an issue.
 
@@ -92,21 +141,23 @@ def create_issue() -> str | Response:
             db.execute(
                 "INSERT INTO issue (comment, issue, author_id, classified_id) \
                 VALUES (?, ?, ?, ?)",
-                (issue_form.comment.data, issue_form.issue.data, author_id, issue_form.classification_id.data)
+                (issue_form.comment.data, issue_form.issue.data,
+                 author_id, issue_form.classification_id.data)
             )
             db.commit()
         except Exception as e:
             errors = {"error": e}
 
-        return redirect(url_for('analyser.analyser'))
+        return redirect(url_for('protected.analyser'))
     # return to analyser page and display flashed messages
-    return render_template('analyser.html')
+    return render_template('protected/analyser.html')
+
 
 def get_issue(issue_id, check_author=True) -> Row:
     """Return an issue given an issue_id.
 
     The sqlite3 database is queried for an issue with the primary key issue_id.
-    If an issue exists with that issue_id, return the issue as a sqlite.Row object 
+    If an issue exists with that issue_id, return the issue as a sqlite.Row object
     containing the issue's: issue_id, comment, issue message, date created, author id and classification id.
     If no issue's exists with the issue_id provided abort and raise an HttpException with a 404 status code.
     If check_author=True and the current signed-in user is not the author of the issue with the issue_id argument,
@@ -122,7 +173,7 @@ def get_issue(issue_id, check_author=True) -> Row:
     Returns
     -------
     Row
-        An issue as a sqlite.Row object.   
+        An issue as a sqlite.Row object.
     """
     issue = get_db().execute(
         "SELECT i.issue_id, i.comment, i.issue, i.date_created, i.author_id, \
@@ -133,6 +184,7 @@ def get_issue(issue_id, check_author=True) -> Row:
         WHERE i.issue_id = ?",
         (issue_id,)
     ).fetchone()
+
     if issue is None:
         abort(404, f"Issue with the id '{issue_id}' doesn't exist.")
 
@@ -141,7 +193,8 @@ def get_issue(issue_id, check_author=True) -> Row:
 
     return issue
 
-@analyser_bp.route('/issue/update/<int:issue_id>', methods=["GET","POST"])
+
+@protected_bp.route('/issue/update/<int:issue_id>', methods=["GET", "POST"])
 @login_required
 def update_issue(issue_id: int) -> Response:
     """Update an issue message in the SQLite database.
@@ -150,8 +203,8 @@ def update_issue(issue_id: int) -> Response:
     is passed to an IssueForm for validation.
     If no validation errors are present in the form data, the database is queried to update the issue message
     for the issue with the issue_id argument.
-    If any errors occur they are flashed to the next request. 
-    The user is then redirected to the analyser page.    
+    If any errors occur they are flashed to the next request.
+    The user is then redirected to the analyser page.
 
     Parameters
     ----------
@@ -168,7 +221,7 @@ def update_issue(issue_id: int) -> Response:
     if request.method == 'POST':
         issue_form = IssueForm(request.form)
         errors = {}
-        
+
         if not issue_form.validate():
             errors = issue_form.errors
         else:
@@ -183,26 +236,27 @@ def update_issue(issue_id: int) -> Response:
             except db.IntegrityError as e:
                 print(e)
                 errors = {"error": e}
-            except Exception as e: 
+            except Exception as e:
                 print(e)
                 errors = {"error": "Error Updating issue in the database."}
-    
+
         if errors:
             for category, message in errors.items():
                         flash(message, category=category)
 
-    return redirect(url_for('analyser.analyser'))
+    return redirect(url_for('protected.analyser'))
 
-@analyser_bp.route('/issue/delete/<int:issue_id>', methods=["POST"])
+
+@protected_bp.route('/issue/delete/<int:issue_id>', methods=["POST"])
 @login_required
 def delete_issue(issue_id: int) -> Response:
     """Delete an issue from the SQLite3 database.
 
     For a POST request, form data containing the issue_id is passed to the view function.
     The database is queried to delete the issue with the passed issue_id.
-    A success message will be flashed if no errors occur otherwise an error message is flashed to the 
+    A success message will be flashed if no errors occur otherwise an error message is flashed to the
     next request.
-    The user is then redirected to the analyser page. 
+    The user is then redirected to the analyser page.
 
     Parameters
     ----------
@@ -221,45 +275,41 @@ def delete_issue(issue_id: int) -> Response:
     try:
         db = get_db()
         db.execute('DELETE FROM issue \
-                   WHERE issue_id = ?', 
+                   WHERE issue_id = ?',
                    (issue_id,))
         db.commit()
     except Exception as e:
         print(e)
-        message = {"Error deleting issue from the database": f"Error deleting issue: {issue_id}"}
-    
+        message = {
+            "Error deleting issue from the database": f"Error deleting issue: {issue_id}"}
+
     flash(next(iter(message.values())), category=next(iter(message.keys())))
-    return redirect(url_for('analyser.analyser'))
+    return redirect(url_for('protected.analyser'))
 
 def get_classification(classification_name: str) -> tuple[int, str]:
-    try:
-        db = get_db()
-        classification = db.execute("SELECT classification_id, classification \
-            FROM classification \
-            WHERE classification = ?",
-            (classification_name,)).fetchone()
-        if classification is None:
-            abort(404,)
-    except Exception as e:
-        print(e)
+    """Return the classification for a classifications name.
+
+    Return a classification_id and classification as a tuple based on the classification name.
+
+    Parameters
+    ----------
+    classification_name : str
+        The name of the binary classification.
+
+    Returns
+    -------
+    tuple[int, str]
+        A tuple containing the classification_id and the classification respectively.
+    """
+    db = get_db()
+    classification = db.execute("SELECT classification_id, classification \
+        FROM classification \
+        WHERE classification = ?",
+        (classification_name,)).fetchone()
+    if classification is None:
+        abort(404,)
 
     return classification['classification_id'], classification['classification']
-
-def get_classification_id(classification_name: str) -> int:
-    classification_id = None
-    try:
-        db = get_db()
-        classification = db.execute("SELECT classification_id \
-            FROM classification \
-            WHERE classification = ?",
-            (classification_name,)).fetchone()
-        if classification is None:
-            abort(404,)
-
-    except Exception as e:
-        print(e)
-        flash("Error getting the classifcation", "")
-    return classification['classification_id']
 
 def update_classifcation(classification_id: int):
     raise NotImplementedError("update_classification has not been implemented!")
@@ -267,59 +317,10 @@ def update_classifcation(classification_id: int):
 def delete_classifcation(classification_id: int):
     raise NotImplementedError("delete_classification has not been implemented!")
 
-@analyser_bp.route('/analyser', methods=["GET","POST"])
-@login_required
-def analyser():
-    """The analyser view function.
-
-    Renders the analyser page which has the comment analysers and displays issues raised by users.
-
-    Returns
-    -------
-    str
-        A rendered template string for the analyser page.
-    """
-    db = get_db()
-    issues = []
-    errors = {}
-    try:
-        issues = db.execute("SELECT i.issue_id, i.comment, i.issue, i.date_created, \
-            u.user_id, u.email, \
-            c.classification_id, c.classification \
-            FROM user AS u \
-            INNER JOIN issue AS i \
-            ON u.user_id = i.author_id \
-            INNER JOIN classification as c \
-            ON i.classified_id = c.classification_id \
-            ORDER BY i.date_created DESC"
-        ).fetchall()
-    except Exception as e:
-        errors = {"error_getting_issues": ["Issues could not be loaded!"]}
-    if errors:
-        for category, message_list in errors.items():
-                for message in message_list:
-                    flash(message, category=category)
-    
-    return render_template('analyser.html', issues=issues)
-
-@analyser_bp.route('/analyser_sqlalchemy')
-@login_required
-def analyser_sqlalchemy():
-    issues = dbase.session.execute(dbase.select(Issue)
-                                   .join(User, Issue.user_id == User.user_id)
-                                   .join(Classification, Issue.classification_id == Classification.classification_id)
-                                   .order_by(Issue.date_created)
-                                   ).scalars().fetchall()
-    issue = Issue(comment = "Bill gates is lovely!", issue = "This was flagged as misinformation and clearly is not.",user_id = 1, classification_id = 1)
-    # dbase.session.add(issue)
-    # dbase.session.commit()
-    return render_template('analyser.html', issues=issues)
-
-@analyser_bp.route("/analyse_comments/<string:source>", methods=["POST"])
+@protected_bp.route("/analyse_comments/<string:source>", methods=["POST"])
 def analyse_comments(source: str) -> Response:
     """Analyse comments view function.
 
-    
     If the source is "youtube_video" treat the request form data as a YouTube videoId and retireve all comments from the YouTube
     video with that VideoId.
     Otherwise, treat the request form data as a single string comment.
@@ -341,16 +342,29 @@ def analyse_comments(source: str) -> Response:
         if source == "youtube_video":
             comments = get_youtube_video_comments(request.form['input'])
             # TODO can display the number of comments using len(comments)
+            # could do this in the template
         elif source == "manually_entered":
             comments = [request.form['input']]
+        else:
+            raise ValueError("Comments could not be returned from an unknown source!")
         predictions = predict_comments(comments)
         classification_data = combine_analysed_data(predictions, comments)
+    except HttpError as e:
+        error_message = f"An error occured while retrieving YouTube comments: {e.status_code} {e.error_details[0]['reason']}"
+        error_type = f"{type(e).__name__} "
+        return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
+    except (ZeroDivisionError, ValueError, OSError) as e:
+        error_message = e.args[0]
+        error_type = str(type(e).__name__)
+        return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
     except Exception as e:
-        print(e)
-    response = make_response(render_template('analyser/analysed_comments.html',
+        error_message = "Something unexpected occurred while analysing comment data!"
+        error_type = "UnexpectedError"
+        return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
+    
+    return make_response(render_template('protected/analysed_comments.html',
                                          classification_data = classification_data)
                             )
-    return response
 
 def get_youtube_video_comments(video_id: str) -> list[str]:
     """Returns a list of all comments from a YouTube video for a specified videoId.  
@@ -359,7 +373,7 @@ def get_youtube_video_comments(video_id: str) -> list[str]:
     100 commentThreads per page.
     Each commentThread contains one top level comment which is added to the comment list; 
     replies to each top level comment are also added to the comment list.
-    Comments are 
+    Comments are extracted from each comment page until not further nextPageToken is found in the response.
     The origional, raw text of the comment is retrieved using the snippet.textOrigional
     property of the YouTube comment resource.
 
@@ -372,6 +386,13 @@ def get_youtube_video_comments(video_id: str) -> list[str]:
     -------
     list[str]
         A list of comments as strings.
+
+    Raises
+    ------
+    ValueError
+        Raised if zero comments are retrieved.
+    HttpError
+        Raised if there is an error returned by the server, such as if the video is not found.
     """
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
@@ -413,17 +434,18 @@ def get_youtube_video_comments(video_id: str) -> list[str]:
                     pageToken=next_page_token
                 ).execute()
             else:
+                # exit while loop.
                 response = None
+        # if no comments are found, raise an exception to be handled in analyse comments.
+        if not all_comments:
+            raise ValueError(f"No comments were found for the YouTube video with videoId: {video_id}")
     except HttpError as e:
-        if(e.error_details):
-            error_dict = e.error_details[0]
-            print(f"{e.status_code} : {error_dict['reason']} for the {error_dict['location']} : {video_id}")
-    except Exception as e:
-        print(e)
-        
+        # re-raise exception to be handled in analyse_comments.
+        raise HttpError(resp=e.resp, content=e.content, uri=e.uri) from e
+            
     return all_comments
 
-def predict_comments(comments: List[str]) -> ndarray:
+def predict_comments(comments: List[str], model_path: str="model") -> ndarray:
     """Return prediction values using the TensorFlow model for a list of comments.
 
     The TensorFlow model is loaded and using keras.Model.predict a NumPy array of predictions
@@ -433,18 +455,31 @@ def predict_comments(comments: List[str]) -> ndarray:
     ----------
     comments : List[str]
         A list of comments as strings.
+    model_path : str
+        The file_path to the TensorFlow neural network model, by default "model".
 
     Returns
     -------
     ndarray
         A NumPy array of prediction values for each comment in comments.
+
+    Raises
+    ------
+    OSError
+        Raised if the neural network model directory cannot be found.
+    ValueError
+        Raised if there is an issue with the shape or dtype of the input comment data. 
+        Empty comment lists will cause this exception to be raised. 
     """
     try:
-        model = keras.models.load_model("model")
+        model = keras.models.load_model(model_path)
         comment_array = np.asarray(comments)
         predictions = model.predict(comment_array, verbose=0)
-    except Exception as e:
-        print(e)
+        # re-raise exceptions to be handled in analyse_comments.
+    except OSError as e:
+        raise OSError("The file for the Neural Network Model could not be found!") from e
+    except ValueError as e:
+        raise ValueError("There is an error with the input comment data during predictions!")
     return predictions
 
 def combine_analysed_data(predictions: ndarray, comments: List[str]) -> Dict:
@@ -467,6 +502,8 @@ def combine_analysed_data(predictions: ndarray, comments: List[str]) -> Dict:
     Dict
         A dictionary of data for analysed comments.
     """
+    if(predictions.size != len(comments)):
+        raise ValueError("The number of prediction values does not match the number of comments!")
     classification_data = {}
     # TODO this may be better to do, by combining NumPy arrays.
     for prediction_number, prediction in enumerate(predictions):
@@ -477,13 +514,11 @@ def combine_analysed_data(predictions: ndarray, comments: List[str]) -> Dict:
         prediction_confidence = calculate_prediction_confidence(prediction_value)
         comment = comments[prediction_number]
         classification_id, classification = classify_prediction(prediction_value)
-        # classification_id, classifcation = get_classification(classification)
-        # classification_id = get_classification_id(classification)
         classification_data[prediction_number+1] = {"comment": comment,
                                                   "classification": classification,
-                                                  "classfication_id": classification_id,
+                                                  "classification_id": classification_id,
                                                   "prediction_value": prediction_value,
-                                                  "prediction_confidence":prediction_confidence
+                                                  "prediction_confidence": prediction_confidence
                                                   }
     return classification_data
 
@@ -509,15 +544,26 @@ def calculate_prediction_confidence(prediction_value: float, prediction_threshol
     -------
     int
         The confidence percentage rounded to two decimal places.
+
+    Raises
+    ------
+    ZeroDivisionError
+        Raised if prediction_threshold is set to 0.
+    ValueError
+        Raised if the prediction_value is outside the range (0-1).
     """
     confidence_percentage = None
+    if prediction_threshold == 0: 
+        raise ZeroDivisionError("A zero-division error has occurred as the prediction threshold has been set to 0!")
+    if(prediction_value<0 or prediction_value>1):
+        raise ValueError("The prediction value of a comment is not within the (0-1) range.")
     if(prediction_value >= prediction_threshold):
         confidence_percentage = int(round((prediction_value - prediction_threshold)/prediction_threshold, 2)*100)
     else:
         confidence_percentage = int(round((prediction_threshold - prediction_value)/prediction_threshold, 2)*100)
     return confidence_percentage
 
-def classify_prediction(prediction: float, prediction_threshold: float=0.5) -> tuple(int, str):
+def classify_prediction(prediction: float, prediction_threshold: float=0.5) -> tuple[int, str]:
     """Takes the models prediction value and returns the classification.
 
     If the prediction value is >=0.5 then it is classified and returned as "Misinformation", 
@@ -536,15 +582,20 @@ def classify_prediction(prediction: float, prediction_threshold: float=0.5) -> t
     str
         The binary classification of the comment; the classification will be either "Misinformation 
         or "Neutral".
+
+     Raises
+    ------
+    ValueError
+        Raised if the prediction_value is outside the range (0-1).
     """
-    if(prediction>=prediction_threshold):
+    if prediction > 1 or prediction < 0:
+        raise ValueError("A prediction value outside the range (0-1) cannot be classified!")
+    if(prediction >= prediction_threshold):
         return get_classification("Misinformation")
     else:
         return get_classification("Neutral")
     
-
-
-@analyser_bp.route("/account", methods=["GET", "POST"])
+@protected_bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account() -> str:
     """The account view function.
@@ -573,6 +624,6 @@ def account() -> str:
         print(e)
         print("Error getting user's issues!")
     
-    return render_template("user/account.html", 
+    return render_template("protected/account.html", 
                            user_issues=user_issues)
 

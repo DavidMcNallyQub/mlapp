@@ -6,10 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{% endblock %} - DOLOS</title>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <script type="text/javascript" src="{{ url_for('static', filename='js/main.js')}}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
 </head>
 
 
@@ -66,13 +68,11 @@
   }
 </style>
 
-
-
 <body>
 
   <nav class="navbar navbar-expand-md bg-dark sticky-top" data-bs-theme="dark">
     <div class="container-fluid mx-5">
-      <a class="navbar-brand fs-1" href="#">DOLOS</a>
+      <a class="navbar-brand fs-1" href="/">DOLOS</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
         aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -80,7 +80,7 @@
       <div class="collapse navbar-collapse" id="navbar">
         <ul class="navbar-nav ms-auto my-3 text-center">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="{{ url_for('analyser.analyser') }}">
+            <a class="nav-link active" aria-current="page" href="{{ url_for('protected.analyser') }}">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                 class="bi bi-speedometer2 d-block mx-auto mb-1" viewBox="0 0 16 16">
                 <path
@@ -92,7 +92,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('analyser.about') }}">
+            <a class="nav-link" href="{{ url_for('public.about') }}">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                 class="bi bi-patch-question d-block mx-auto mb-1" viewBox="0 0 16 16">
                 <path
@@ -106,7 +106,7 @@
           </li>
           {% if g.user %}
           <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="{{ url_for('protected.account')}}">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                 class="bi bi-person d-block mx-auto mb-1" viewBox="0 0 16 16">
                 <path
@@ -158,17 +158,114 @@
     </div>
   </nav>
 
-  <section class="content">
-    <header>
-      {% block header %}{% endblock %}
-    </header>
-    {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
-    {% endfor %}
-    {% block content %}{% endblock %}
-  </section>
+  <!--Sidebar-->
+  {# TAKE OUT FOR DEMO REMOVE LATER!!!
+  <main class="d-flex flex-nowrap">
+    <div class="d-flex flex-column flex-shrink-0 bg-light" style="width: 4.5rem;">
+      <a href="{{ url_for('protected.analyser') }}" class="d-block p-3 link-dark text-decoration-none"
+        title="Comment Analyser" data-bs-toggle="tooltip" data-bs-placement="right">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" fill="currentColor" class="bi bi-chat-quote"
+          viewBox="0 0 16 16">
+          <path
+            d="M2.678 11.894a1 1 0 0 1 .287.801 10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.807 7-6 0-3.192-3.004-6-7-6S1 4.808 1 8c0 1.468.617 2.83 1.678 3.894zm-.493 3.905a21.682 21.682 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a9.68 9.68 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105z" />
+          <path
+            d="M7.066 6.76A1.665 1.665 0 0 0 4 7.668a1.667 1.667 0 0 0 2.561 1.406c-.131.389-.375.804-.777 1.22a.417.417 0 0 0 .6.58c1.486-1.54 1.293-3.214.682-4.112zm4 0A1.665 1.665 0 0 0 8 7.668a1.667 1.667 0 0 0 2.561 1.406c-.131.389-.375.804-.777 1.22a.417.417 0 0 0 .6.58c1.486-1.54 1.293-3.214.682-4.112z" />
+        </svg>
+        <span class="visually-hidden">Icon-only</span>
+      </a>
+      <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
+        <li class="nav-item">
+          <a href="{{ url_for('protected.analyser') }}" class="nav-link active py-3 border-bottom rounded-0"
+            aria-current="page" title="Youtube Comment Analyser" data-bs-toggle="tooltip" data-bs-placement="right">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-youtube"
+              viewBox="0 0 16 16">
+              <path
+                d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z" />
+            </svg>
+          </a>
+        </li>
+        <li>
+            <a href="{{ url_for('protected.analyser') }}" class="nav-link py-3 border-bottom rounded-0 disabled"
+              title="CSV Analyser (Coming soon...)" data-bs-toggle="tooltip" data-bs-placement="right" aria-disabled="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                class="bi bi-filetype-csv" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                  d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5L14 4.5ZM3.517 14.841a1.13 1.13 0 0 0 .401.823c.13.108.289.192.478.252.19.061.411.091.665.091.338 0 .624-.053.859-.158.236-.105.416-.252.539-.44.125-.189.187-.408.187-.656 0-.224-.045-.41-.134-.56a1.001 1.001 0 0 0-.375-.357 2.027 2.027 0 0 0-.566-.21l-.621-.144a.97.97 0 0 1-.404-.176.37.37 0 0 1-.144-.299c0-.156.062-.284.185-.384.125-.101.296-.152.512-.152.143 0 .266.023.37.068a.624.624 0 0 1 .246.181.56.56 0 0 1 .12.258h.75a1.092 1.092 0 0 0-.2-.566 1.21 1.21 0 0 0-.5-.41 1.813 1.813 0 0 0-.78-.152c-.293 0-.551.05-.776.15-.225.099-.4.24-.527.421-.127.182-.19.395-.19.639 0 .201.04.376.122.524.082.149.2.27.352.367.152.095.332.167.539.213l.618.144c.207.049.361.113.463.193a.387.387 0 0 1 .152.326.505.505 0 0 1-.085.29.559.559 0 0 1-.255.193c-.111.047-.249.07-.413.07-.117 0-.223-.013-.32-.04a.838.838 0 0 1-.248-.115.578.578 0 0 1-.255-.384h-.765ZM.806 13.693c0-.248.034-.46.102-.633a.868.868 0 0 1 .302-.399.814.814 0 0 1 .475-.137c.15 0 .283.032.398.097a.7.7 0 0 1 .272.26.85.85 0 0 1 .12.381h.765v-.072a1.33 1.33 0 0 0-.466-.964 1.441 1.441 0 0 0-.489-.272 1.838 1.838 0 0 0-.606-.097c-.356 0-.66.074-.911.223-.25.148-.44.359-.572.632-.13.274-.196.6-.196.979v.498c0 .379.064.704.193.976.131.271.322.48.572.626.25.145.554.217.914.217.293 0 .554-.055.785-.164.23-.11.414-.26.55-.454a1.27 1.27 0 0 0 .226-.674v-.076h-.764a.799.799 0 0 1-.118.363.7.7 0 0 1-.272.25.874.874 0 0 1-.401.087.845.845 0 0 1-.478-.132.833.833 0 0 1-.299-.392 1.699 1.699 0 0 1-.102-.627v-.495Zm8.239 2.238h-.953l-1.338-3.999h.917l.896 3.138h.038l.888-3.138h.879l-1.327 4Z" />
+              </svg>
+            </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link py-3 border-bottom rounded-0" title="Orders" data-bs-toggle="tooltip"
+            data-bs-placement="right">
+            <svg class="bi pe-none" width="24" height="24" role="img" aria-label="Orders">
+              <use xlink:href="#table" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link py-3 border-bottom rounded-0" title="Products" data-bs-toggle="tooltip"
+            data-bs-placement="right">
+            <svg class="bi pe-none" width="24" height="24" role="img" aria-label="Products">
+              <use xlink:href="#grid" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link py-3 border-bottom rounded-0" title="Customers" data-bs-toggle="tooltip"
+            data-bs-placement="right">
+            <svg class="bi pe-none" width="24" height="24" role="img" aria-label="Customers">
+              <use xlink:href="#people-circle" />
+            </svg>
+          </a>
+        </li>
+      </ul>
+      <div class="dropdown border-top">
+        <a href="#"
+          class="d-flex align-items-center justify-content-center p-3 link-dark text-decoration-none dropdown-toggle"
+          data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://github.com/mdo.png" alt="mdo" width="24" height="24" class="rounded-circle">
+        </a>
+        <ul class="dropdown-menu text-small shadow">
+          <li><a class="dropdown-item" href="#">New project...</a></li>
+          <li><a class="dropdown-item" href="#">Settings</a></li>
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li>
+            <hr class="dropdown-divider">
+          </li>
+          <li><a class="dropdown-item" href="#">Sign out</a></li>
+        </ul>
+      </div>
+    </div>
 
-  <div class="container-fluid bg-dark fixed-bottom" data-bs-theme="dark">
+    <div class="b-example-divider b-example-vr"></div>
+  #}
+    <section class="content">
+      <header>
+        {% block header %}{% endblock %}
+      </header>
+
+      <div class="container-fluid">
+        {% for category, message in get_flashed_messages(with_categories=True) %}
+        {% if category=="success" %}
+        {% set alert_type="success" %}
+        {% elif category=="warning" %}
+        {% set category="warning" %}
+        {% else %}
+        {% set alert_type="danger" %}
+        {% endif %}
+        <div class="alert alert-{{ alert_type }} alert-dismissible fade show text-center" role="alert">
+          <strong>{# category|upper #}{{ message }}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        {% endfor %}
+      </div>
+
+      {% block content %}{% endblock %}
+    </section>
+  {# REMOVE FOR DEMO PUT BACK LATER!
+  </main> #}
+  <div class="container-fluid bg-dark" data-bs-theme="dark">
     <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 mx-5 border-top">
       <div class="col-md-4 d-flex align-items-center">
         <span class="mb-3 mb-md-0 text-muted">David McNally, Queen's University Belfast</span>
@@ -197,6 +294,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N" crossorigin="anonymous">
     </script>
+  <script src="{{ url_for('static', filename='js/sidebars.js') }}"></script>
   {% block script %}
 
   {% endblock %}
