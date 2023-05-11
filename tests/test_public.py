@@ -1,5 +1,5 @@
 """
-This module is used to test functionality of public view functions and any related functions.  
+This module is used to test functionality of view functions that do not require authentication and any related functions.  
 
 Functions:
 - test_index: Test the index view function.

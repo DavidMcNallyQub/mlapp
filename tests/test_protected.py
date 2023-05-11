@@ -103,7 +103,7 @@ def test_create_issue(app, client, auth):
         assert count == 2
 
 # TODO : def test_get_issue_existing(issue_id: int):
-# TODO: test_get_issue_nonexistent(issue_id: int)
+# TODO : def test_get_issue_nonexistent(issue_id: int)
 
 def update_issue(app, client, auth):
     """Test the update_issue view function.

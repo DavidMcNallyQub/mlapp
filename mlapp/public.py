@@ -2,8 +2,8 @@
 This module contains view functions that do no require authentication and their related functions.
 
 Functions:
-- index: The index route.
-- about: The about route. 
+- index: View function used to render the index page.
+- about: View function used to render the about page. 
 
 """
 from flask import (

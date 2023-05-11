@@ -2,25 +2,21 @@
 This module contains a Blueprint to register view functions that require authentication and their related functions.
 
 Functions:
-- analyser: Render the analyser page template as a string which Flask uses as the body of the response.
-- create_issue: Create an issue view function.
-- get_issue: The get_issue function.
-- test_update_issue: Test the update_issue view function.
-- test_create_update_validate: Test the form validators for the create_issue and update_issue view functions.
-- test_delete_issue: Test the delete_issue view function
-# TODO test_get_classification: Test the get_classification function.
-# TODO test_update_classification:
-# TODO test_delete_classification:
-# TODO test_analyse_comments:
-# TODO test_get_youtube_video_comments
-# TODO test_predict_comments:
-# TODO test_combine_analysed_data:
-# TODO test_calculate_prediction_confidence:
-# TODO test_classify_prediction:
-# TODO test_account:
-- test_login_required: Test the view functions that require a logged in user.
-- test_issue_author_required: Tests the view functions that require logged in users to be issue authors.
-- test_issue_exists_required: Test the view functions that require existing issues.
+- analyser: View function used to analyse comment data.
+- create_issue: View function used to create and issue.
+- get_issue: Function used to return an issue.
+- update_issue: View function used to update an issue.
+- delete_issue: View function used to delete an issue.
+- get_classification: Return a classification.
+# TODO update_classification: Update a classification.
+# TODO delete_classification: Delete a classification.
+- analyse_comments: View function used to analyse comment data.
+- get_youtube_video_comments: Return YouTube video comments for a given videoId.
+- predict_comments: Return predictions of a list of comments as a NumPy array.
+- combine_analysed_data: Return a dictionary of comment and prediction data.  
+- calculate_prediction_confidence: Calculate the cofidence of the model prediction for a comment.
+- classify_prediction: Return the binary classification of a prediction value of a comment.
+- account: View function used to render the account page.
 """
 import functools
 
@@ -346,7 +342,7 @@ def analyse_comments(source: str) -> Response:
     
     return make_response(render_template('protected/analysed_comments.html',
                                          classification_data = classification_data)
-                            )
+                        )
 
 def get_youtube_video_comments(video_id: str) -> list[str]:
     """Returns a list of all comments from a YouTube video for a specified videoId.  
