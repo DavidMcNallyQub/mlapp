@@ -40,4 +40,4 @@ def internal_server_error(e) -> tuple[str, int]:
     -------
     tuple(str, int)
         A tuple with the error template rendered as a string and the status code as an integer."""
-    return render_template('500.html'), 500
+    return render_template('error_handlers/500.html'), 500
