@@ -458,7 +458,7 @@ def predict_comments(comments: List[str], model_path: str="model") -> ndarray:
         predictions = model.predict(comment_array, verbose=0)
         # re-raise exceptions to be handled in analyse_comments.
     except OSError as e:
-        raise OSError("The file for the Neural Network Model could not be found!") from e
+        raise OSError(f"The file for the Neural Network Model could not be found! {e}") from e
     except ValueError as e:
         raise ValueError("There is an error with the input comment data during predictions!")
     return predictions
