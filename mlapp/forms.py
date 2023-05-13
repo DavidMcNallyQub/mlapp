@@ -3,13 +3,14 @@ EMAIL_MIN_LENGTH = 6
 EMAIL_MAX_LENGTH = 100
 
 class RegistrationForm(Form):
-    email = StringField('Register Email Address', 
-                        [validators.DataRequired("Email address is required!"),
-                         validators.Length(min=EMAIL_MIN_LENGTH, 
-                                           max=EMAIL_MAX_LENGTH, 
-                                           message=f'Accepted email addresses are {EMAIL_MIN_LENGTH}-{EMAIL_MAX_LENGTH} characters!'), 
-                         validators.Email(message="Not a valid email address!")]
-                        )
+    email = StringField('Register Email Address', [
+        validators.DataRequired("Email address is required!"),
+        validators.Length(min=EMAIL_MIN_LENGTH, 
+                        max=EMAIL_MAX_LENGTH, 
+                        message=f'Accepted email addresses are {EMAIL_MIN_LENGTH}-{EMAIL_MAX_LENGTH} characters!'), 
+        # validators.Email(message="Not a valid email address!")
+        ]
+    )
     password = PasswordField('New Password', 
                              [validators.DataRequired("Password is required!"), 
                               validators.EqualTo('confirm_password', 
