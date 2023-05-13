@@ -33,7 +33,7 @@ from mlapp.auth import login_required
 from tensorflow import keras
 import numpy as np
 # for YouTube API
-# import os
+import os
 import googleapiclient.discovery
 # for type hints
 from typing import List, Dict, Any
@@ -458,7 +458,8 @@ def predict_comments(comments: List[str], model_path: str="model") -> ndarray:
         predictions = model.predict(comment_array, verbose=0)
         # re-raise exceptions to be handled in analyse_comments.
     except OSError as e:
-        raise OSError(f"The file for the Neural Network Model could not be found! {e}") from e
+        cwd = os.getcwd()
+        raise OSError(f"The file for the Neural Network Model could not be found! {e}\n in the cwd directory.") from e
     except ValueError as e:
         raise ValueError("There is an error with the input comment data during predictions!")
     return predictions
