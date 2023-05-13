@@ -1,3 +1,0 @@
-# ignore files to reduce slug size when deploying to heroku
-/tests
-/mlapp/database_commands.sql
