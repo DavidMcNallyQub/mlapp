@@ -23,7 +23,7 @@ import functools
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, make_response, Response
 )
-from flask_paginate import Pagination, get_page_parameter
+# from flask_paginate import Pagination, get_page_parameter
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
 from mlapp.db import get_db
@@ -33,7 +33,7 @@ from mlapp.auth import login_required
 from tensorflow import keras
 import numpy as np
 # for YouTube API
-import os
+# import os
 import googleapiclient.discovery
 # for type hints
 from typing import List, Dict, Any
@@ -59,8 +59,8 @@ def analyser():
     """
     db = get_db()
     errors = {}
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    per_page = 2 # set the number of issues per page
+    # page = request.args.get(get_page_parameter(), type=int, default=1)
+    # per_page = 2 # set the number of issues per page
     try:
         issues = db.execute("SELECT i.issue_id, i.comment, i.issue, i.date_created, \
             u.user_id, u.email, \
@@ -81,12 +81,15 @@ def analyser():
                     flash(message, category=category)
 
     # use the paginate function to get a sublist of issues for the current page
-    pagination = Pagination(page=page, per_page=per_page, total=len(issues), css_framework='bootstrap5')
-    start = (page - 1) * per_page
-    end = start + per_page
-    issues_for_page = issues[start:end]
+    # pagination = Pagination(page=page, per_page=per_page, total=len(issues), css_framework='bootstrap5')
+    # start = (page - 1) * per_page
+    # end = start + per_page
+    # issues_for_page = issues[start:end]
     
-    return render_template('protected/analyser.html', issues=issues_for_page, pagination=pagination)
+    return render_template('protected/analyser.html', 
+                           issues=issues, 
+                        #    pagination=pagination
+                           )
 
 @protected_bp.route('/issues', methods=["POST"])
 def create_issue() -> str | Response:
@@ -374,7 +377,7 @@ def get_youtube_video_comments(video_id: str) -> list[str]:
     """
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    # os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     api_service_name = "youtube"
     api_version = "v3"
