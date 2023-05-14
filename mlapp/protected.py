@@ -454,6 +454,7 @@ def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndar
     """
     try:
         # dealing with TensorFlow model's TextVectorisation conflict
+        @keras.utils.register_keras_serializable
         class MyTextVectorizationLayer(keras.layers.experimental.preprocessing.TextVectorization):
             
             def __init__(self):
@@ -468,7 +469,7 @@ def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndar
                     encoding='utf-8'
                     )
         # Load the model using a CustomObjectScope that includes your custom class
-        with keras.utils.custom_object_scope({'MyTextVectorizationLayer': MyTextVectorizationLayer}):
+        with keras.utils.custom_object_scope({'TextVectorization': MyTextVectorizationLayer}):
             model = keras.models.load_model(model_path)
 
         comment_array = np.asarray(comments)
