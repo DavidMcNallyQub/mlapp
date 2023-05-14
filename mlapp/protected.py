@@ -426,7 +426,7 @@ def get_youtube_video_comments(video_id: str) -> list[str]:
             
     return all_comments
 
-def predict_comments(comments: List[str], model_path: str="ml_web_app/model") -> ndarray:
+def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndarray:
     """Return prediction values using the TensorFlow model for a list of comments.
 
     The TensorFlow model is loaded and using keras.Model.predict a NumPy array of predictions
