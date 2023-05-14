@@ -454,24 +454,19 @@ def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndar
     """
     try:
         # dealing with TensorFlow model's TextVectorisation conflict
-        @keras.utils.register_keras_serializable
-        class MyCustomTextVectorization(keras.layers.experimental.preprocessing.TextVectorization):
-            
-            def __init__(self):
-                super(MyCustomTextVectorization, self).__init__(
-                    max_tokens=10000,
-                    standardize="lower_and_strip_punctuation",
-                    split="whitespace",
-                    ngrams=None,
-                    output_mode="int",
-                    output_sequence_length=250,
-                    vocabulary=None,
-                    encoding='utf-8'
-                )
+        # Define your custom TextVectorization layer
+        class MyCustomTextVectorization(tf.keras.layers.experimental.preprocessing.TextVectorization):
+            def __init__(self, *args, **kwargs):
+                super(MyCustomTextVectorization, self).__init__(*args, **kwargs)
 
-        # Load the model using a CustomObjectScope that includes your custom class
-        with keras.utils.custom_object_scope({'MyCustomTextVectorization': MyCustomTextVectorization}):
-            model = keras.models.load_model(model_path)
+        # Load the saved model and replace its TextVectorization layer with your custom layer
+        model = keras.models.load_model(model_path)
+        for layer in model.layers:
+            if isinstance(layer, keras.layers.experimental.preprocessing.TextVectorization):
+                custom_layer = MyCustomTextVectorization.from_config(layer.get_config())
+                custom_layer.set_weights(layer.get_weights())
+                layer_index = model.layers.index(layer)
+                model.layers[layer_index] = custom_layer
 
         comment_array = np.asarray(comments)
         predictions = model.predict(comment_array, verbose=0)
