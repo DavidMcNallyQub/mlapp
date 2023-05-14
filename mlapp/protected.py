@@ -426,7 +426,7 @@ def get_youtube_video_comments(video_id: str) -> list[str]:
             
     return all_comments
 
-def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndarray:
+def predict_comments(comments: List[str], model_path: str="ml_web_app/model") -> ndarray:
     """Return prediction values using the TensorFlow model for a list of comments.
 
     The TensorFlow model is loaded and using keras.Model.predict a NumPy array of predictions
@@ -453,7 +453,24 @@ def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndar
         Empty comment lists will cause this exception to be raised. 
     """
     try:
-        model = keras.models.load_model(model_path)
+        # dealing with TensorFlow model's TextVectorisation conflict
+        class MyTextVectorizationLayer(keras.layers.experimental.preprocessing.TextVectorization):
+            
+            def __init__(self):
+                super(MyTextVectorizationLayer, self).__init__(
+                    max_tokens=10000,
+                    standardize="lower_and_strip_punctuation",
+                    split="whitespace",
+                    ngrams=None,
+                    output_mode="int",
+                    output_sequence_length=250,
+                    vocabulary=None,
+                    encoding='utf-8'
+                    )
+        # Load the model using a CustomObjectScope that includes your custom class
+        with keras.utils.custom_object_scope({'MyTextVectorizationLayer': MyTextVectorizationLayer}):
+            model = keras.models.load_model(model_path)
+
         comment_array = np.asarray(comments)
         predictions = model.predict(comment_array, verbose=0)
         # re-raise exceptions to be handled in analyse_comments.
