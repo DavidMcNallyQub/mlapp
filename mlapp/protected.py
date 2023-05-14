@@ -339,7 +339,7 @@ def analyse_comments(source: str) -> Response:
         error_type = str(type(e).__name__)
         return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
     except Exception as e:
-        error_message = "Something unexpected occurred while analysing comment data!"
+        error_message = f"Something unexpected occurred while analysing comment data! {e}"
         error_type = "UnexpectedError"
         return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
     
@@ -437,7 +437,7 @@ def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndar
     comments : List[str]
         A list of comments as strings.
     model_path : str
-        The file_path to the TensorFlow neural network model, by default "model".
+        The file_path to the TensorFlow neural network model, by default set to "model" for development and "/mlapp/model for deployed app.
 
     Returns
     -------
