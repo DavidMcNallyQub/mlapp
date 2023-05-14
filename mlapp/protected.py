@@ -455,7 +455,7 @@ def predict_comments(comments: List[str], model_path: str="mlapp/model") -> ndar
     try:
         # dealing with TensorFlow model's TextVectorisation conflict
         # Define your custom TextVectorization layer
-        class MyCustomTextVectorization(tf.keras.layers.experimental.preprocessing.TextVectorization):
+        class MyCustomTextVectorization(keras.layers.experimental.preprocessing.TextVectorization):
             def __init__(self, *args, **kwargs):
                 super(MyCustomTextVectorization, self).__init__(*args, **kwargs)
 
