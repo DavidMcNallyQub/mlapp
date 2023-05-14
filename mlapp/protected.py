@@ -19,7 +19,7 @@ Functions:
 - account: View function used to render the account page.
 """
 import functools
-
+import traceback
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, make_response, Response
 )
@@ -339,7 +339,7 @@ def analyse_comments(source: str) -> Response:
         error_type = str(type(e).__name__)
         return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
     except Exception as e:
-        error_message = f"Something unexpected occurred while analysing comment data! {e}"
+        error_message = f"Something unexpected occurred while analysing comment data!\n{e}\nTraceBack:{traceback.format_exc()}"
         error_type = "UnexpectedError"
         return make_response(render_template('protected/analyser_error.html', error_message=error_message, error_type=error_type ))
     
